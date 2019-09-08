@@ -1,0 +1,31 @@
+#build star index
+#author: shimw
+#2018.10.06
+dir1="dbGaP-16932"
+mkdir -p /home/mwshi/project/prostate/index/$dir1
+echo "/home/nazhang/luozhihui/software/STAR/bin/Linux_x86_64/STAR --runThreadN 8 --runMode genomeGenerate --genomeDir /home/mwshi/project/prostate/index/$dir1 --genomeFastaFiles /home/mwshi/project/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sjdbGTFfile /home/mwshi/project/genome/Homo_sapiens.gtf --sjdbOverhang 75">/home/mwshi/project/prostate/pbs/001_starindex_$dir1.pbs
+
+dir2="dbGaP-15865"
+mkdir -p /home/mwshi/project/prostate/index/$dir2
+echo "/home/nazhang/luozhihui/software/STAR/bin/Linux_x86_64/STAR --runThreadN 8 --runMode genomeGenerate --genomeDir /home/mwshi/project/prostate/index/$dir2 --genomeFastaFiles /home/mwshi/project/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sjdbGTFfile /home/mwshi/project/genome/Homo_sapiens.gtf --sjdbOverhang 100">/home/mwshi/project/prostate/pbs/001_starindex_$dir2.pbs
+
+dir3="dbGaP-15518"
+mkdir -p /home/mwshi/project/prostate/index/$dir3
+echo "/home/nazhang/luozhihui/software/STAR/bin/Linux_x86_64/STAR --runThreadN 8 --runMode genomeGenerate --genomeDir /home/mwshi/project/prostate/index/$dir3 --genomeFastaFiles /home/mwshi/project/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sjdbGTFfile /home/mwshi/project/genome/Homo_sapiens.gtf --sjdbOverhang 75">/home/mwshi/project/prostate/pbs/001_starindex_$dir3.pbs
+
+mkdir -p /home/mwshi/project/prostate/index/log
+cd /home/mwshi/project/prostate/index/log
+
+for i in `ls /home/mwshi/project/prostate/pbs/001_starindex_*.pbs`; do qsub -q middle -V -l nodes=1:ppn=8 $i;done
+
+rm /home/mwshi/project/prostate/pbs/001_starindex_*.pbs
+dir4="TCGA"
+mkdir -p /home/mwshi/project/prostate/index/$dir4
+echo "/home/nazhang/luozhihui/software/STAR/bin/Linux_x86_64/STAR --runThreadN 8 --runMode genomeGenerate --genomeDir /home/mwshi/project/prostate/index/$dir4 --genomeFastaFiles /home/mwshi/project/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sjdbGTFfile /home/mwshi/project/genome/Homo_sapiens.gtf --sjdbOverhang 100">/home/mwshi/project/prostate/pbs/001_starindex_$dir4.pbs
+cd /home/mwshi/project/prostate/index/log
+
+for i in `ls /home/mwshi/project/prostate/pbs/001_starindex_*.pbs`; do qsub -q batch -V -l nodes=1:ppn=8 $i;done
+
+
+
+

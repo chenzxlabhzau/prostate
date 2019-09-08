@@ -1,0 +1,30 @@
+
+mkdir -p /home/mwshi/project/prostate/readcount
+
+
+
+for dir in `ls /home/mwshi/project/prostate/data/`
+do mkdir -p /home/mwshi/project/prostate/readcount/$dir
+for file in `ls /home/mwshi/project/prostate/bam_v2/$dir`
+do echo -e 'htseq-count -f bam -r pos -s no -t exon -i gene_id /home/mwshi/project/prostate/bam_v2/'$dir'/'$file'/'$file'Aligned.sortedByCoord.out.bam /home/zxchen/data/annotation/Ensembl_92/Homo_sapiens>/home/mwshi/project/prostate/readcount/'$dir'/'$file'.txt'>/home/mwshi/project/prostate/pbs/007.1_readcount_$file.pbs
+done
+done
+
+#数据整合
+for i in `ls /home/mwshi/project/prostate/readcount/`
+do
+Rscript /home/mwshi/project/prostate/script/readcount.R /home/mwshi/project/prostate/readcount/$i
+done
+
+#计算fpkm
+rm /home/mwshi/project/prostate/pbs/007.1_readcount_*.pbs
+dir="TCGA"
+mkdir -p /home/mwshi/project/prostate/readcount/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do echo -e 'htseq-count -f bam -r pos -s no -t exon -i gene_id /home/mwshi/project/prostate/bam/'$dir'/'$file'/'$file'Aligned.sortedByCoord.out.bam /home/zxchen/data/annotation/Ensembl_92/Homo_sapiens>/home/mwshi/project/prostate/readcount/'$dir'/'$file'.txt'>/home/mwshi/project/prostate/pbs/007.1_readcount_$file.pbs
+done
+
+cd ~/cache
+for i in `ls /home/mwshi/project/prostate/pbs/007.1_readcount_TCGA_*.pbs`; do qsub -q batch -V -l nodes=1:ppn=4 $i;done
+Rscript /home/mwshi/project/prostate/script/readcount.R /home/mwshi/project/prostate/readcount/TCGA
+Rscript /home/mwshi/project/prostate/script/fpkm.R /home/mwshi/project/prostate/readcount/TCGA/

@@ -1,0 +1,20 @@
+dir3="dbGaP-15518"
+mkdir -p /home/mwshi/project/prostate/index/primary
+echo "/home/nazhang/luozhihui/software/STAR/bin/Linux_x86_64/STAR --runThreadN 12 --runMode genomeGenerate --genomeDir /home/mwshi/project/prostate/index/primary --genomeFastaFiles /home/zyang/liuyan/ref_genome/human38/Homo_sapiens.GRCh38.dna.primary_assembly.fa --sjdbGTFfile /home/zxchen/data/annotation/Ensembl_92/Homo_sapiens --sjdbOverhang 75">/home/mwshi/project/prostate/pbs/000_test_index_primary_$dir3.pbs
+
+qsub -q middle -V -l nodes=1:ppn=12 /home/mwshi/project/prostate/pbs/000_test_index_primary_dbGaP-15518.pbs
+
+mkdir -p /home/mwshi/project/prostate/index/toplevl
+echo "/home/nazhang/luozhihui/software/STAR/bin/Linux_x86_64/STAR --runThreadN 12 --runMode genomeGenerate --genomeDir /home/mwshi/project/prostate/index/toplevl --genomeFastaFiles /home/mwshi/project/genome/selected_human.fasta --sjdbGTFfile /home/zxchen/data/annotation/Ensembl_92/Homo_sapiens --sjdbOverhang 75">/home/mwshi/project/prostate/pbs/000_test_index_toplevl_$dir3.pbs
+
+qsub -q middle -V -l nodes=1:ppn=12 /home/mwshi/project/prostate/pbs/000_test_index_toplevl_dbGaP-15518.pbs
+
+mkdir -p /home/mwshi/project/prostate/bam_v2/primary
+
+echo "/home/nazhang/luozhihui/software/STAR/bin/Linux_x86_64/STAR --runThreadN 20 --twopassMode Basic --readFilesCommand zcat --outReadsUnmapped Fastx --chimSegmentMin 20 --chimJunctionOverhangMin 20 --genomeDir /home/mwshi/project/prostate/index/primary --outSAMtype BAM SortedByCoordinate --readFilesIn /home/mwshi/project/prostate/quality/dbGaP-15518/SRR3146878_1.fq.gz /home/mwshi/project/prostate/quality/dbGaP-15518/SRR3146878_2.fq.gz --chimOutJunctionFormat 1 --outFileNamePrefix /home/mwshi/project/prostate/bam_v2/primary/SRR3146878 --chimOutType Junctions SeparateSAMold">/home/mwshi/project/prostate/pbs/000_test_mapping_primary_SRR3146878.pbs
+qsub -q batch -V -l nodes=1:ppn=20 /home/mwshi/project/prostate/pbs/000_test_mapping_primary_SRR3146878.pbs
+
+mkdir -p /home/mwshi/project/prostate/bam_v2/toplevl
+
+echo "/home/nazhang/luozhihui/software/STAR/bin/Linux_x86_64/STAR --runThreadN 20 --twopassMode Basic --readFilesCommand zcat --outReadsUnmapped Fastx --chimSegmentMin 20 --chimJunctionOverhangMin 20 --genomeDir /home/mwshi/project/prostate/index/toplevl --outSAMtype BAM SortedByCoordinate --readFilesIn /home/mwshi/project/prostate/quality/dbGaP-15518/SRR3146878_1.fq.gz /home/mwshi/project/prostate/quality/dbGaP-15518/SRR3146878_2.fq.gz --chimOutJunctionFormat 1 --outFileNamePrefix /home/mwshi/project/prostate/bam_v2/toplevl/SRR3146878 --chimOutType Junctions SeparateSAMold">/home/mwshi/project/prostate/pbs/000_test_mapping_toplevel_SRR3146878.pbs
+qsub -q batch -V -l nodes=1:ppn=20 /home/mwshi/project/prostate/pbs/000_test_mapping_toplevel_SRR3146878.pbs

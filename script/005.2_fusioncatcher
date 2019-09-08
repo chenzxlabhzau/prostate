@@ -1,0 +1,86 @@
+#shimw
+#fusioncatcher
+mkdir -p /home/mwshi/project/prostate/fusioncatcher
+#dir1="dbGaP-16932"
+#mkdir -p /home/mwshi/project/prostate/fusioncatcher/$dir1
+#echo -e 'for file in `ls /home/mwshi/project/prostate/bam/'$dir1'`\ndo\nmkdir -p /home/mwshi/project/prostate/fusioncatcher/'$dir1'/$file\n/home/mwshi/tools/fusioncatcher/bin/fusioncatcher -i /home/mwshi/project/prostate/quality/'$dir1'/${file}_1.fq.gz,/home/mwshi/project/prostate/quality/'$dir1'/${file}_2.fq.gz -p 20 -o /home/mwshi/project/prostate/fusioncatcher/'$dir1'/$file\ndone'>/home/mwshi/project/prostate/pbs/005.2_fusioncatcher_$dir1.pbs
+
+#dir2="dbGaP-15865"
+#mkdir -p /home/mwshi/project/prostate/fusioncatcher/$dir2
+#echo -e 'for file in `ls /home/mwshi/project/prostate/bam/'$dir2'`\ndo\nmkdir -p /home/mwshi/project/prostate/fusioncatcher/'$dir2'/$file\n/home/mwshi/tools/fusioncatcher/bin/fusioncatcher -i /home/mwshi/project/prostate/quality/'$dir2'/${file}_1.fq.gz,/home/mwshi/project/prostate/quality/'$dir2'/${file}_2.fq.gz -p 20 -o /home/mwshi/project/prostate/fusioncatcher/'$dir2'/$file\ndone'>/home/mwshi/project/prostate/pbs/005.2_fusioncatcher_$dir2.pbs
+
+#dir3="dbGaP-15518"
+#mkdir -p /home/mwshi/project/prostate/fusioncatcher/$dir3
+#echo -e 'for file in `ls /home/mwshi/project/prostate/bam/'$dir3'`\ndo\nmkdir -p /home/mwshi/project/prostate/fusioncatcher/'$dir3'/$file\n/home/mwshi/tools/fusioncatcher/bin/fusioncatcher -i /home/mwshi/project/prostate/quality/'$dir3'/${file}_1.fq.gz,/home/mwshi/project/prostate/quality/'$dir3'/${file}_2.fq.gz -p 20 -o /home/mwshi/project/prostate/fusioncatcher/'$dir3'/$file\ndone'>/home/mwshi/project/prostate/pbs/005.2_fusioncatcher_$dir3.pbs
+
+for dir in `ls /home/mwshi/project/prostate/readcount/`
+do 
+#mkdir -p /home/mwshi/project/prostate/starfusion/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+echo -e 'mkdir -p /home/mwshi/project/prostate/fusioncatcher/'$dir'/'$file'\n/home/mwshi/tools/fusioncatcher/bin/fusioncatcher -i /home/mwshi/project/prostate/quality/'$dir'/'${file}'_1.fq.gz,/home/mwshi/project/prostate/quality/'$dir'/'${file}'_2.fq.gz -p 20 -o /home/mwshi/project/prostate/fusioncatcher/'$dir'/'$file''>/home/mwshi/project/prostate/pbs/005.2_fusioncatcher_$file.pbs
+done
+done
+
+
+
+mkdir -p /home/mwshi/project/prostate/fusioncatcher/log
+cd /home/mwshi/project/prostate/fusioncatcher/log
+#for i in `ls /home/mwshi/project/prostate/pbs/005.2_fusioncatcher_*.pbs`; do qsub -q batch -V -l nodes=1:ppn=20 $i;done
+
+for dir in `ls /home/mwshi/project/prostate/readcount/`
+do
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+if [ ! -e /home/mwshi/project/prostate/fusioncatcher/$dir/$file/final-list_candidate-fusion-genes.txt ]
+then
+qsub -q batch -V -l nodes=1:ppn=20 /home/mwshi/project/prostate/pbs/005.2_fusioncatcher_$file.pbs
+#echo $file
+fi
+done
+done
+
+dir="TCGA"
+mkdir -p /home/mwshi/project/prostate/fusioncatcher/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+echo -e 'mkdir -p /home/mwshi/project/prostate/fusioncatcher/'$dir'/'$file'\n/home/mwshi/tools/fusioncatcher/bin/fusioncatcher -i /home/mwshi/project/prostate/quality/'$dir'/'${file}'_1.fq.gz,/home/mwshi/project/prostate/quality/'$dir'/'${file}'_2.fq.gz -p 20 -o /home/mwshi/project/prostate/fusioncatcher/'$dir'/'$file''>/home/mwshi/project/prostate/pbs/005.2_fusioncatcher_$file.pbs
+done
+
+
+cd /home/mwshi/project/prostate/fusioncatcher/log
+
+#for i in `ls /home/mwshi/project/prostate/pbs/005.2_fusioncatcher_TCGA*.pbs|head -n 100`;do qsub -q batch -V -l nodes=1:ppn=14 $i;done
+#for i in `ls /home/mwshi/project/prostate/pbs/005.2_fusioncatcher_TCGA*.pbs|tail -n +101|head -n 100`;do qsub -q batch -V -l nodes=1:ppn=14 $i;done
+#for i in `ls /home/mwshi/project/prostate/pbs/005.2_fusioncatcher_TCGA*.pbs|tail -n +201|head -n 100`;do qsub -q batch -V -l nodes=1:ppn=14 $i;done
+#for i in `ls /home/mwshi/project/prostate/pbs/005.2_fusioncatcher_TCGA*.pbs|tail -n +301|head -n 100`;do qsub -q batch -V -l nodes=1:ppn=14 $i;done
+#for i in `ls /home/mwshi/project/prostate/pbs/005.2_fusioncatcher_TCGA*.pbs|tail -n +401|head -n 100`;do qsub -q batch -V -l nodes=1:ppn=14 $i;done
+for i in `ls /home/mwshi/project/prostate/pbs/005.2_fusioncatcher_TCGA*.pbs|tail -n +501|head -n 100`;do qsub -q batch -V -l nodes=1:ppn=14 $i;done
+
+
+dir="TCGA"
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+if [ ! -e /home/mwshi/project/prostate/fusioncatcher/$dir/$file/final-list_candidate-fusion-genes.txt ]
+then
+qsub -q batch -V -l nodes=1:ppn=20 /home/mwshi/project/prostate/pbs/005.2_fusioncatcher_$file.pbs
+#echo $file
+fi
+done
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

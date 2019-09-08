@@ -1,0 +1,55 @@
+
+source activate shimwpy3
+mkdir -p /home/mwshi/project/prostate/circexplorer2/
+mkdir -p /home/mwshi/project/prostate/circexplorer2/annotation/
+cd /home/mwshi/project/prostate/circexplorer2/annotation/
+fetch_ucsc.py hg38 ref hg38_ref.txt
+fetch_ucsc.py hg38 kg hg38_kg.txt
+fetch_ucsc.py hg38 fa hg38.fa
+mv hg38_ref.txt hg38_ref.txt.old
+mv hg38_kg.txt hg38_kg.txt.old
+cat hg38_ref.txt.old hg38_kg.txt.old > hg38_ref_all.txt
+
+rm /home/mwshi/project/prostate/pbs/006.1_circexplorer2_*.pbs
+for dir in `ls /home/mwshi/project/prostate/readcount/`
+do
+mkdir -p /home/mwshi/project/prostate/circexplorer2/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+#echo "source activate shimwpy3;mkdir -p /home/mwshi/project/prostate/circexplorer2/$dir/$file;cd /home/mwshi/project/prostate/circexplorer2/$dir/$file;CIRCexplorer2 parse -t STAR /home/mwshi/project/prostate/bam/$dir/$file/${file}Chimeric.out.junction > CIRCexplorer2_parse.log;cat /home/mwshi/project/prostate/circexplorer2/$dir/$file/back_spliced_junction.bed|awk -v FS='\t' -v OFS='\t' '"'{ $1="chr"$1; if (length($1)<6) print }'"'>/home/mwshi/project/prostate/circexplorer2/$dir/$file/back_spliced_junction.bed.new;CIRCexplorer2 annotate -r /home/mwshi/project/prostate/circexplorer2/annotation/hg38_kg.txt.old -g /home/mwshi/project/prostate/circexplorer2/annotation/hg38.fa -b /home/mwshi/project/prostate/circexplorer2/$dir/$file/back_spliced_junction.bed.new -o /home/mwshi/project/prostate/circexplorer2/$dir/$file/circularRNA_known.txt >/home/mwshi/project/prostate/circexplorer2/$dir/$file/CIRCexplorer2_annotate.log">/home/mwshi/project/prostate/pbs/006.1_circexplorer2_$file.pbs
+
+echo "source activate shimwpy3;mkdir -p /home/mwshi/project/prostate/circexplorer2/$dir/$file;cd /home/mwshi/project/prostate/circexplorer2/$dir/$file;CIRCexplorer2 parse -t STAR /home/mwshi/project/prostate/bam/$dir/$file/${file}Chimeric.out.junction > CIRCexplorer2_parse.log;CIRCexplorer2 annotate -r /home/mwshi/project/genome/Homo_sapiens_ref.txt -g /home/mwshi/project/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa -b /home/mwshi/project/prostate/circexplorer2/$dir/$file/back_spliced_junction.bed -o /home/mwshi/project/prostate/circexplorer2/$dir/$file/circularRNA_known.txt >/home/mwshi/project/prostate/circexplorer2/$dir/$file/CIRCexplorer2_annotate.log">/home/mwshi/project/prostate/pbs/006.1_circexplorer2_$file.pbs
+
+done
+done
+#mkdir -p /home/mwshi/project/prostate/circexplorer2/log
+cd /home/mwshi/project/prostate/circexplorer2/log
+
+#for i in `ls /home/mwshi/project/prostate/pbs/006.1_circexplorer2_*.pbs` ; do qsub -q batch -V -l nodes=1:ppn=2 $i;done
+for dir in `ls /home/mwshi/project/prostate/readcount/`
+do
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+if [ ! -e /home/mwshi/project/prostate/circexplorer2/$dir/$file/circularRNA_known.txt ]
+then
+qsub -q batch -V -l nodes=1:ppn=2 /home/mwshi/project/prostate/pbs/006.1_circexplorer2_$file.pbs
+#echo $file
+fi
+done
+done
+
+##TCGA
+dir="TCGA"
+mkdir -p /home/mwshi/project/prostate/circexplorer2/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+echo "source activate shimwpy3;mkdir -p /home/mwshi/project/prostate/circexplorer2/$dir/$file;cd /home/mwshi/project/prostate/circexplorer2/$dir/$file;CIRCexplorer2 parse -t STAR /home/mwshi/project/prostate/bam/$dir/$file/${file}Chimeric.out.junction > CIRCexplorer2_parse.log;CIRCexplorer2 annotate -r /home/mwshi/project/genome/Homo_sapiens_ref.txt -g /home/mwshi/project/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa -b /home/mwshi/project/prostate/circexplorer2/$dir/$file/back_spliced_junction.bed -o /home/mwshi/project/prostate/circexplorer2/$dir/$file/circularRNA_known.txt >/home/mwshi/project/prostate/circexplorer2/$dir/$file/CIRCexplorer2_annotate.log">/home/mwshi/project/prostate/pbs/006.1_circexplorer2_$file.pbs
+done
+
+
+
+
+
+
+
+

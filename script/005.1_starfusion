@@ -1,0 +1,54 @@
+
+#准备库文件
+mkdir -p /home/mwshi/project/prostate/STAR-Fusion/lib/
+cd /home/mwshi/project/prostate/STAR-Fusion/lib/
+wget https://data.broadinstitute.org/Trinity/CTAT_RESOURCE_LIB/GRCh38_v27_CTAT_lib_Feb092018.source_data.tar.gz
+tar xvf GRCh38_v27_CTAT_lib_Feb092018.source_data.tar.gz
+cd /home/mwshi/project/prostate/STAR-Fusion/lib/GRCh38_v27_CTAT_lib_Feb092018/
+rm /home/mwshi/project/prostate/STAR-Fusion/lib/GRCh38_v27_CTAT_lib_Feb092018/ref_genome.fa
+rm /home/mwshi/project/prostate/STAR-Fusion/lib/GRCh38_v27_CTAT_lib_Feb092018/ref_annot.gtf
+echo -e 'cd /home/mwshi/project/prostate/STAR-Fusion/lib/GRCh38_v27_CTAT_lib_Feb092018/\n/home/mwshi/miniconda2/lib/STAR-Fusion/FusionFilter/prep_genome_lib.pl --genome_fa /home/mwshi/project/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa --gtf /home/mwshi/project/genome/Homo_sapiens.gtf --fusion_annot_lib CTAT_HumanFusionLib.dat.gz --annot_filter_rule AnnotFilterRule.pm --pfam_db PFAM.domtblout.dat.gz'>/home/mwshi/project/prostate/STAR-Fusion/lib/starfusion_index.pbs
+qsub -q middle -V -l nodes=1:ppn=4 /home/mwshi/project/prostate/STAR-Fusion/lib/starfusion_index.pbs
+
+mkdir -p /home/mwshi/project/prostate/starfusion
+for dir in `ls /home/mwshi/project/prostate/readcount/`
+do mkdir -p /home/mwshi/project/prostate/starfusion/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+echo -e "mkdir -p /home/mwshi/project/prostate/starfusion/$dir/$file\nSTAR-Fusion --genome_lib_dir /home/mwshi/project/prostate/STAR-Fusion/lib/GRCh38_v27_CTAT_lib_Feb092018/ctat_genome_lib_build_dir/ -J /home/mwshi/project/prostate/bam/$dir/$file/${file}Chimeric.out.junction --CPU 8 --output_dir /home/mwshi/project/prostate/starfusion/$dir/$file">/home/mwshi/project/prostate/pbs/005.1_starfusion_$file.pbs
+done
+done
+mkdir -p /home/mwshi/project/prostate/starfusion/log
+cd /home/mwshi/project/prostate/starfusion/log
+
+for i in `ls /home/mwshi/project/prostate/pbs/005.1_starfusion_*.pbs`; do qsub -q batch -V -l nodes=1:ppn=8 $i;done
+
+for dir in `ls /home/mwshi/project/prostate/readcount/`
+do
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+if [ ! -e /home/mwshi/project/prostate/starfusion/$dir/$file/star-fusion.fusion_predictions.abridged.tsv ]
+then
+#qsub -q batch -V -l nodes=1:ppn=8 /home/mwshi/project/prostate/pbs/005.1_starfusion_$file.pbs
+echo $file
+fi
+done
+done
+
+
+dir="TCGA"
+do mkdir -p /home/mwshi/project/prostate/starfusion/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+echo -e "mkdir -p /home/mwshi/project/prostate/starfusion/$dir/$file\nSTAR-Fusion --genome_lib_dir /home/mwshi/project/prostate/STAR-Fusion/lib/GRCh38_v27_CTAT_lib_Feb092018/ctat_genome_lib_build_dir/ -J /home/mwshi/project/prostate/bam/$dir/$file/${file}Chimeric.out.junction --CPU 8 --output_dir /home/mwshi/project/prostate/starfusion/$dir/$file">/home/mwshi/project/prostate/pbs/005.1_starfusion_$file.pbs
+done
+cd /home/mwshi/project/prostate/starfusion/log
+for i in `ls /home/mwshi/project/prostate/pbs/005.1_starfusion_TCGA*.pbs`;do qsub -q batch -V -l nodes=1:ppn=8 $i;done
+
+
+
+
+
+
+
+

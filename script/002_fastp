@@ -1,0 +1,9 @@
+#fastp:quality control
+#author: shimw
+#2018.10.26
+for dir in `ls /home/mwshi/project/prostate/data/`
+do
+mkdir -p /home/mwshi/project/prostate/quality/$dir
+echo -e 'for file in `ls /home/mwshi/project/prostate/data/'$dir'/*_1.fastq`\ndo\nj=`basename $file`\n/home/nazhang/luozhihui/software/fastp/bin/fastp -i $file -I /home/mwshi/project/prostate/data/'$dir'/${j%_*}_2.fastq --thread 8 -o /home/mwshi/project/prostate/quality/'$dir'/${j%_*}_1.fq.gz -O /home/mwshi/project/prostate/quality/'$dir'/${j%_*}_2.fq.gz\ndone'>/home/mwshi/project/prostate/pbs/002_fastp_$dir.pbs
+done
+for i in `ls /home/mwshi/project/prostate/pbs/002_fastp_*.pbs`; do qsub -q middle -V -l nodes=1:ppn=8 $i;done

@@ -1,0 +1,1 @@
+~/tools/starchip/setup.sh /home/mwshi/project/genome/Homo_sapiens.gtf /home/mwshi/project/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa /home/mwshi/project/prostate/starchip/annotations/

@@ -1,0 +1,42 @@
+#mapsplice使用，要求包括fa文件必须一个染色体一个文件，文件第一行不能有注释，只能用fastq格式
+#index我在/home/mwshi/tools/MapSplice/index.pbs 中建立完毕
+mkdir -p /home/mwshi/project/prostate/mapsplice/
+mkdir -p /home/mwshi/project/prostate/rawdata
+
+for dir in `ls /home/mwshi/project/prostate/data/`
+do
+#mkdir -p /home/mwshi/project/prostate/mapsplice/$dir
+mkdir -p /home/mwshi/project/prostate/rawdata/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+echo -e 'source activate mapsplice\ngunzip -c /home/mwshi/project/prostate/quality/'$dir'/'${file}'_1.fq.gz>/home/mwshi/project/prostate/rawdata/'$dir'/'${file}'_1.fq\ngunzip -c /home/mwshi/project/prostate/quality/'$dir'/'${file}'_2.fq.gz>/home/mwshi/project/prostate/rawdata/'$dir'/'${file}'_2.fq\nmkdir -p /home/mwshi/project/prostate/mapsplice/'$dir'/'$file'\npython ~/tools/MapSplice/mapsplice.py -c /home/mwshi/tools/MapSplice/genome -x /home/mwshi/tools/MapSplice/index/human -p 8 -1 /home/mwshi/project/prostate/rawdata/'$dir'/'${file}'_1.fq -2 /home/mwshi/project/prostate/rawdata/'$dir'/'${file}'_2.fq -o /home/mwshi/project/prostate/mapsplice/'$dir'/'$file' --bam --min-fusion-distance 200 --gene-gtf /home/mwshi/project/genome/Homo_sapiens.gtf --fusion'>/home/mwshi/project/prostate/pbs/006.3_mapsplice_$file.pbs
+done
+done
+
+
+mkdir /home/mwshi/project/prostate/mapsplice/log
+cd /home/mwshi/project/prostate/mapsplice/log
+
+#for i in `ls /home/mwshi/project/prostate/pbs/006.3_mapsplice_*.pbs`; do qsub -q batch -V -l nodes=1:ppn=8 $i;done
+for dir in `ls /home/mwshi/project/prostate/readcount/`
+do
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+if [ ! -e /home/mwshi/project/prostate/mapsplice/$dir/$file/circular_RNAs.txt ]
+then
+qsub -q batch -V -l nodes=1:ppn=8 /home/mwshi/project/prostate/pbs/006.3_mapsplice_$file.pbs
+#echo $file
+fi
+done
+done
+
+
+dir="TCGA"
+mkdir -p /home/mwshi/project/prostate/mapsplice/$dir
+mkdir -p /home/mwshi/project/prostate/rawdata/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+echo -e 'source activate mapsplice\ngunzip -c /home/mwshi/project/prostate/quality/'$dir'/'${file}'_1.fq.gz>/home/mwshi/project/prostate/rawdata/'$dir'/'${file}'_1.fq\ngunzip -c /home/mwshi/project/prostate/quality/'$dir'/'${file}'_2.fq.gz>/home/mwshi/project/prostate/rawdata/'$dir'/'${file}'_2.fq\nmkdir -p /home/mwshi/project/prostate/mapsplice/'$dir'/'$file'\npython ~/tools/MapSplice/mapsplice.py -c /home/mwshi/tools/MapSplice/genome -x /home/mwshi/tools/MapSplice/index/human -p 8 -1 /home/mwshi/project/prostate/rawdata/'$dir'/'${file}'_1.fq -2 /home/mwshi/project/prostate/rawdata/'$dir'/'${file}'_2.fq -o /home/mwshi/project/prostate/mapsplice/'$dir'/'$file' --bam --min-fusion-distance 200 --gene-gtf /home/mwshi/project/genome/Homo_sapiens.gtf --fusion&&rm /home/mwshi/project/prostate/rawdata/'$dir'/'${file}'_*.fq'>/home/mwshi/project/prostate/pbs/006.3_mapsplice_$file.pbs
+done
+cd /home/mwshi/project/prostate/mapsplice/log
+for i in `ls /home/mwshi/project/prostate/pbs/006.3_mapsplice_TCGA*.pbs`; do qsub -q batch -V -l nodes=1:ppn=8 $i;done

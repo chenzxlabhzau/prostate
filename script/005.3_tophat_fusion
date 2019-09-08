@@ -1,0 +1,91 @@
+###shimw
+###2019/1/2
+
+
+#cd /home/mwshi/tools/
+#wget http://ccb.jhu.edu/software/tophat/downloads/tophat-2.1.1.Linux_x86_64.tar.gz
+#tar zxf tophat-2.1.1.Linux_x86_64.tar.gz
+#mv tophat-2.1.1.Linux_x86_64 tophat2
+#rm -r /home/mwshi/project/prostate/bam_ln/*
+#建立索引
+mkdir -p /home/mwshi/project/genome/bowtie-index
+echo "bowtie2-build /home/mwshi/project/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa /home/mwshi/project/genome/bowtie-index/human">/home/mwshi/project/prostate/pbs/005.3_bowtie_index.pbs
+qsub -q batch -V -l nodes=1:ppn=4 /home/mwshi/project/prostate/pbs/005.3_bowtie_index.pbs
+
+#进行比对
+mkdir -p /home/mwshi/project/prostate/tophat_fusion/
+
+for dir in `ls /home/mwshi/project/prostate/data/`
+do
+mkdir -p /home/mwshi/project/prostate/tophat_fusion/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+echo -e 'mkdir -p /home/mwshi/project/prostate/tophat_fusion/'$dir'/'$file'\n/home/mwshi/tools/tophat2/tophat2 -p 12 --fusion-search --keep-fasta-order --bowtie1 --no-coverage-search --fusion-anchor-length 10 --fusion-ignore-chromosomes chrM  --fusion-min-dist 100000 --mate-std-dev 80 -o /home/mwshi/project/prostate/tophat_fusion/'$dir'/'$file' /home/mwshi/project/genome/bowtie-index/human /home/mwshi/project/prostate/quality/'$dir'/'${file}'_1.fq.gz /home/mwshi/project/prostate/quality/'$dir'/'${file}'_2.fq.gz'>/home/mwshi/project/prostate/pbs/005.3_tophat_fusion_$file.pbs
+done
+done
+
+mkdir -p /home/mwshi/project/prostate/tophat_fusion/log
+cd /home/mwshi/project/prostate/tophat_fusion/log
+for i in `ls /home/mwshi/project/prostate/pbs/005.3_tophat_fusion_*.pbs`; do qsub -q batch -V -l nodes=1:ppn=12 $i;done
+
+##TCGA
+dir="TCGA"
+mkdir -p /home/mwshi/project/prostate/tophat_fusion/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+echo -e 'source activate tophat_fusion\nmkdir -p /home/mwshi/project/prostate/tophat_fusion/'$dir'/'$file'\n/home/mwshi/tools/tophat2/tophat2 -p 12 --fusion-search --keep-fasta-order --bowtie1 --no-coverage-search --fusion-anchor-length 10 --fusion-ignore-chromosomes chrM  --fusion-min-dist 100000 --mate-std-dev 80 -o /home/mwshi/project/prostate/tophat_fusion/'$dir'/'$file' /home/mwshi/project/genome/bowtie-index/human /home/mwshi/project/prostate/quality/'$dir'/'${file}'_1.fq.gz /home/mwshi/project/prostate/quality/'$dir'/'${file}'_2.fq.gz'>/home/mwshi/project/prostate/pbs/005.3_tophat_fusion_$file.pbs
+done
+cd /home/mwshi/project/prostate/tophat_fusion/log
+
+#for i in `ls /home/mwshi/project/prostate/pbs/005.3_tophat_fusion_TCGA*.pbs|head -n 100`;do qsub -q batch -V -l nodes=1:ppn=8 $i;done
+#for i in `ls /home/mwshi/project/prostate/pbs/005.3_tophat_fusion_TCGA*.pbs|tail -n +101|head -n 100`;do qsub -q batch -V -l nodes=1:ppn=12 $i;done
+#for i in `ls /home/mwshi/project/prostate/pbs/005.3_tophat_fusion_TCGA*.pbs|tail -n +201|head -n 100`;do qsub -q batch -V -l nodes=1:ppn=12 $i;done
+#for i in `ls /home/mwshi/project/prostate/pbs/005.3_tophat_fusion_TCGA*.pbs|tail -n +301|head -n 100`;do qsub -q batch -V -l nodes=1:ppn=12 $i;done
+#for i in `ls /home/mwshi/project/prostate/pbs/005.3_tophat_fusion_TCGA*.pbs|tail -n +401|head -n 100`;do qsub -q batch -V -l nodes=1:ppn=12 $i;done
+#for i in `ls /home/mwshi/project/prostate/pbs/005.3_tophat_fusion_TCGA*.pbs|tail -n +501|head -n 100`;do qsub -q batch -V -l nodes=1:ppn=12 $i;done
+
+
+
+
+#fusion准备文件夹
+cd /home/mwshi/project/prostate/tophat_fusion/
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg38/database/refGene.txt.gz
+wget https://ccb.jhu.edu/software/tophat/downloads/hg38/ensGene.txt.gz
+gunzip *.gz
+python ~/python/uscstoensembl.py refGene.txt 3
+python ~/python/uscstoensembl.py ensGene.txt 3
+
+
+for dir in `ls /home/mwshi/project/prostate/data/`
+do
+rename SRR tophat_SRR /home/mwshi/project/prostate/tophat_fusion/$dir/SRR*
+ln -s /home/mwshi/project/prostate/tophat_fusion/blast/ /home/mwshi/project/prostate/tophat_fusion/$dir/blast
+ln -s /home/mwshi/project/prostate/tophat_fusion/refGene.txt /home/mwshi/project/prostate/tophat_fusion/$dir/refGene.txt
+ln -s /home/mwshi/project/prostate/tophat_fusion/ensGene.txt /home/mwshi/project/prostate/tophat_fusion/$dir/ensGene.txt
+done
+sed -i '1d' "/home/mwshi/project/prostate/tophat_fusion/ensGene.txt"
+
+#fusion 鉴定
+
+for dir in `ls /home/mwshi/project/prostate/data/`
+do
+echo -e "cd /home/mwshi/project/prostate/tophat_fusion/$dir\n/home/mwshi/tools/tophat2/tophat-fusion-post --num-fusion-reads 1 -p 20 --num-fusion-pairs 2 --num-fusion-both 5 /home/mwshi/project/genome/bowtie-index/human">/home/mwshi/project/prostate/pbs/005.3_detect_fusion_$dir.pbs
+done
+cd /home/mwshi/project/prostate/tophat_fusion/log
+for i in `ls /home/mwshi/project/prostate/pbs/005.3_detect_fusion_dbGaP*.pbs`; do qsub -q batch -V -l nodes=1:ppn=20 $i;done
+
+
+###TCGA
+rename TCGA- tophat_TCGA- /home/mwshi/project/prostate/tophat_fusion/TCGA/TCGA-*
+ln -s /home/mwshi/project/prostate/tophat_fusion/blast/ /home/mwshi/project/prostate/tophat_fusion/TCGA/blast
+ln -s /home/mwshi/project/prostate/tophat_fusion/refGene.txt /home/mwshi/project/prostate/tophat_fusion/TCGA/refGene.txt
+ln -s /home/mwshi/project/prostate/tophat_fusion/ensGene.txt /home/mwshi/project/prostate/tophat_fusion/TCGA/ensGene.txt
+echo -e "source activate tophat_fusion\ncd /home/mwshi/project/prostate/tophat_fusion/TCGA\n/home/mwshi/tools/tophat2/tophat-fusion-post --num-fusion-reads 1 -p 20 --num-fusion-pairs 2 --num-fusion-both 5 /home/mwshi/project/genome/bowtie-index/human">/home/mwshi/project/prostate/pbs/005.3_detect_fusion_TCGA.pbs
+
+qsub -q batch -V -l nodes=1:ppn=20 /home/mwshi/project/prostate/pbs/005.3_detect_fusion_TCGA.pbs
+
+
+
+
+
+

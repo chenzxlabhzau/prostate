@@ -1,0 +1,10 @@
+#fastqc
+#author: shimw
+#2018.10.30
+for dir in `ls /home/mwshi/project/prostate/data/`
+do
+mkdir -p /home/mwshi/project/prostate/fastqc/afterfastp/$dir
+j=`basename $file`
+echo -e 'for file in `ls /home/mwshi/project/prostate/quality/'$dir'/*_1.fq.gz`\ndo\nj=`basename $file`\n/home/zyang/yangz/biosoft/FastQC/fastqc -f fastq -t 8 -o /home/mwshi/project/prostate/fastqc/afterfastp/'$dir' $file /home/mwshi/project/prostate/quality/'$dir'/${j%_*}_2.fq.gz\ndone'>/home/mwshi/project/prostate/pbs/002.5_fastqc_$dir.pbs
+done
+for i in `ls /home/mwshi/project/prostate/pbs/002.5_fastqc_*.pbs`; do qsub -q middle -V -l nodes=1:ppn=8 $i;done

@@ -1,0 +1,96 @@
+#shimw
+#2018/12/23
+
+
+#建立bwa索引
+mkdir /home/mwshi/project/prostate/bwa-index
+echo "/home/mwshi/tools/github/bwa/bwa index -a bwtsw /home/mwshi/project/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa -p /home/mwshi/project/prostate/bwa-index/Homo_sapiens">/home/mwshi/project/prostate/pbs/006.2_bwa_index.pbs
+
+qsub -q batch -V -l nodes=1:ppn=20 /home/mwshi/project/prostate/pbs/006.2_bwa_index.pbs
+
+#等索引建立完才能做下面的mapping
+
+mkdir -p /home/mwshi/project/prostate/ciri
+mkdir -p /home/mwshi/project/prostate/ciri/log
+for dir in `ls /home/mwshi/project/prostate/readcount/`
+do
+mkdir -p /home/mwshi/project/prostate/ciri/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+
+echo -e '#mkdir -p /home/mwshi/project/prostate/ciri/'$dir'/'$file'\n/home/mwshi/tools/github/bwa/bwa mem -T 19 /home/mwshi/project/prostate/bwa-index/Homo_sapiens /home/mwshi/project/prostate/quality/'$dir'/'$file'_1.fq.gz /home/mwshi/project/prostate/quality/'$dir'/'$file'_2.fq.gz 1>/home/mwshi/project/prostate/ciri/'$dir'/'$file'/'$file'.sam'>/home/mwshi/project/prostate/pbs/006.2_ciri2_$file.pbs
+done
+done
+cd /home/mwshi/project/prostate/ciri/log
+for dir in `ls /home/mwshi/project/prostate/readcount/`
+do
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+if [ ! -e /home/mwshi/project/prostate/ciri/$dir/$file/${file}.sam ]
+then
+qsub -q batch -V -l nodes=1:ppn=8 /home/mwshi/project/prostate/pbs/006.2_ciri2_$file.pbs
+fi
+done
+done
+
+#for i in `ls /home/mwshi/project/prostate/pbs/006.2_ciri2_*.pbs`; do qsub -q batch -V -l nodes=1:ppn=8 $i;done
+
+
+#等mapping之后跑ciri
+for dir in `ls /home/mwshi/project/prostate/data/`
+do
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+echo "perl /home/mwshi/tools/CIRI_v2.0.6/CIRI2.pl -I /home/mwshi/project/prostate/ciri/$dir/$file/${file}.sam -O /home/mwshi/project/prostate/ciri/$dir/$file/${file}.txt -F /home/mwshi/project/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa -A /home/mwshi/project/genome/Homo_sapiens.gtf&&rm /home/mwshi/project/prostate/ciri/$dir/$file/${file}.sam">/home/mwshi/project/prostate/pbs/006.2_circle_$file.pbs
+done
+done
+
+cd /home/mwshi/project/prostate/ciri/log
+for dir in `ls /home/mwshi/project/prostate/data/`
+do
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+if [ ! -e /home/mwshi/project/prostate/ciri/$dir/$file/${file}.txt ]
+then
+qsub -q batch -V -l nodes=1:ppn=4 /home/mwshi/project/prostate/pbs/006.2_circle_$file.pbs
+fi
+done
+done
+#for i in `ls /home/mwshi/project/prostate/pbs/006.2_circle_*.pbs`; do qsub -q batch -V -l nodes=1:ppn=4 $i;done
+
+
+##TCGA
+dir="TCGA"
+mkdir -p /home/mwshi/project/prostate/ciri/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+
+echo -e 'mkdir -p /home/mwshi/project/prostate/ciri/'$dir'/'$file'\n/home/mwshi/tools/github/bwa/bwa mem -T 19 /home/mwshi/project/prostate/bwa-index/Homo_sapiens /home/mwshi/project/prostate/quality/'$dir'/'$file'_1.fq.gz /home/mwshi/project/prostate/quality/'$dir'/'$file'_2.fq.gz 1>/home/mwshi/project/prostate/ciri/'$dir'/'$file'/'$file'.sam'>/home/mwshi/project/prostate/pbs/006.2_ciri2_$file.pbs
+done
+cd /home/mwshi/project/prostate/ciri/log
+for i in `ls /home/mwshi/project/prostate/pbs/006.2_ciri2_TCGA*.pbs`; do qsub -q batch -V -l nodes=1:ppn=8 $i;done
+
+
+dir="TCGA"
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+echo "perl /home/mwshi/tools/CIRI_v2.0.6/CIRI2.pl -I /home/mwshi/project/prostate/ciri/$dir/$file/${file}.sam -O /home/mwshi/project/prostate/ciri/$dir/$file/${file}.txt -F /home/mwshi/project/genome/Homo_sapiens.GRCh38.dna.primary_assembly.fa -A /home/mwshi/project/genome/Homo_sapiens.gtf&&rm /home/mwshi/project/prostate/ciri/$dir/$file/${file}.sam">/home/mwshi/project/prostate/pbs/006.2_circle_$file.pbs
+done
+
+cd /home/mwshi/project/prostate/ciri/log
+for i in `ls /home/mwshi/project/prostate/pbs/006.2_circle_TCGA*.pbs`; do qsub -q batch -V -l nodes=1:ppn=4 $i;done
+dir="TCGA"
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+if [ ! -e /home/mwshi/project/prostate/ciri/$dir/$file/${file}.txt ]
+then
+echo $file
+#qsub -q batch -V -l nodes=1:ppn=4 /home/mwshi/project/prostate/pbs/006.2_circle_$file.pbs
+fi
+done
+
+
+
+
+
+

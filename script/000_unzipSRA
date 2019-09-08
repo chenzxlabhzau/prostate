@@ -1,0 +1,29 @@
+for dir in dbGaP-15518 dbGaP-15865
+do
+for file in `ls /home/sqian/yangz/ncbi/$dir/*.sra`
+do
+j=`basename $file`
+echo "cd /home/sqian/yangz/ncbi/$dir;fastq-dump --outdir /home/mwshi/project/prostate/data/$dir --split-3 $file">/home/mwshi/project/prostate/pbs/000_unzip_${j%.*}.pbs
+done
+done
+for i in `ls /home/mwshi/project/prostate/pbs/000_unzip_*.pbs`; do qsub -q middle -V -l nodes=1:ppn=4 $i;done
+
+#²âÊÔÊý¾Ý
+rm /home/mwshi/project/prostate/pbs/000_unzip_*.pbs
+dir="test"
+for file in `ls /home/mwshi/ncbi/public/sra/*.sra`
+do
+j=`basename $file`
+echo "cd /home/mwshi/ncbi/public/sra/;fastq-dump --outdir /home/mwshi/project/prostate/data/$dir --split-3 $file">/home/mwshi/project/prostate/pbs/000_unzip_${j%.*}.pbs
+done
+for i in `ls /home/mwshi/project/prostate/pbs/000_unzip_*.pbs`; do qsub -q batch -V -l nodes=1:ppn=4 $i;done
+
+
+dir="dbGaP-15865"
+for file in `ls /home/sqian/yangz/ncbi/$dir/*.sra`
+do
+j=`basename $file`
+echo "cd /home/sqian/yangz/ncbi/$dir;fastq-dump --outdir /home/mwshi/project/prostate/data/$dir --split-3 $file">/home/mwshi/project/prostate/pbs/000_unzip_${j%.*}.pbs
+done
+
+for i in `ls /home/mwshi/project/prostate/pbs/000_unzip_*.pbs`; do qsub -q middle -V -l nodes=1:ppn=4 $i;done

@@ -1,0 +1,33 @@
+mkdir -p /home/mwshi/project/prostate/bam_ln
+for dir in `ls /home/mwshi/project/prostate/data/`
+do
+mkdir -p /home/mwshi/project/prostate/bam_ln/$dir
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do
+mkdir -p /home/mwshi/project/prostate/bam_ln/$dir/$file
+ln -s /home/mwshi/project/prostate/bam/$dir/$file/${file}Aligned.sortedByCoord.out.bam /home/mwshi/project/prostate/bam_ln/$dir/$file/Aligned.sortedByCoord.out.bam
+ln -s /home/mwshi/project/prostate/bam/$dir/$file/${file}Chimeric.out.junction /home/mwshi/project/prostate/bam_ln/$dir/$file/Chimeric.out.junction
+ln -s /home/mwshi/project/prostate/bam/$dir/$file/${file}Chimeric.out.sam /home/mwshi/project/prostate/bam_ln/$dir/$file/Chimeric.out.sam
+ln -s /home/mwshi/project/prostate/bam/$dir/$file/${file}SJ.out.tab /home/mwshi/project/prostate/bam_ln/$dir/$file/SJ.out.tab
+ln -s /home/mwshi/project/prostate/bam/$dir/$file/${file}Unmapped.out.mate1 /home/mwshi/project/prostate/bam_ln/$dir/$file/Unmapped.out.mate1
+ln -s /home/mwshi/project/prostate/bam/$dir/$file/${file}Unmapped.out.mate2 /home/mwshi/project/prostate/bam_ln/$dir/$file/Unmapped.out.mate2
+done
+done
+
+
+
+
+
+for dir in `ls /home/mwshi/project/prostate/data/`
+do
+mkdir -p /home/mwshi/project/prostate/circle/$dir
+mkdir -p /home/mwshi/project/prostate/circle/log
+cd /home/mwshi/project/prostate/circle/log
+ls /home/mwshi/project/prostate/bam_ln/$dir/|awk '{print "/home/mwshi/project/prostate/bam_ln/'$dir'/"$1}'>/home/mwshi/project/prostate/starchip/${dir}.txt
+echo -e "cd /home/mwshi/project/prostate/circle/$dir\n/home/mwshi/tools/starchip/starchip-circles.pl /home/mwshi/project/prostate/starchip/${dir}.txt /home/mwshi/project/prostate/starchip/starchip-circles.params\nsh Step1.sh\nsh Step2.sh">/home/mwshi/project/prostate/pbs/006_circle_$dir.pbs
+done
+
+for i in `ls /home/mwshi/project/prostate/pbs/006_circle_*.pbs`; do qsub -q batch -V -l nodes=1:ppn=8 $i;done
+
+
+

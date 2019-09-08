@@ -1,0 +1,41 @@
+mkdir -p /home/mwshi/project/prostate/quality/TCGA
+mkdir -p /home/mwshi/project/prostate/quality/temp
+cd /home/mwshi/project/prostate/quality/log/
+#压缩一下fastq文件
+for file in `ls /home/mwshi/project/prostate/data/*/*.fastq`
+do
+j=`basename $file`
+echo "gzip $file">/home/mwshi/project/prostate/pbs/000_gzip_${j%.*}.pbs
+done
+for i in `ls /home/mwshi/project/prostate/pbs/000_gzip_*.pbs`; do qsub -q middle -V -l nodes=1:ppn=4 $i;done
+
+
+##删除一下tophat的bam文件
+#rm /home/mwshi/project/prostate/tophat_fusion/*/*/accepted_hits.bam
+
+#把没质控的fastq文件也删了腾腾空间
+#rm /home/mwshi/project/prostate/*/*.gz
+
+#把mapsplice的比对文件也删掉腾空间
+#rm /home/mwshi/project/prostate/mapsplice/*/*/alignments.bam
+
+for file in `ls /home/sqian/yangz/TCGA-PRAD/data/`
+do
+echo -e 'samtools sort -@ 4 -n -o /home/mwshi/project/prostate/quality/temp/'${file}'.bam /home/sqian/yangz/TCGA-PRAD/data/'$file'/*.bam\nbedtools bamtofastq -i /home/mwshi/project/prostate/quality/temp/'${file}'.bam -fq /home/mwshi/project/prostate/quality/TCGA/'${file}'_1.fq -fq2 '${file}'_2.fq\ngzip /home/mwshi/project/prostate/quality/TCGA/'${file}'_1.fq\ngzip /home/mwshi/project/prostate/quality/TCGA/'${file}'_2.fq\nrm /home/mwshi/project/prostate/quality/temp/'${file}'.bam'>/home/mwshi/project/prostate/pbs/000_bamtofq_$file.pbs
+done
+#rm /home/mwshi/project/prostate/pbs/000_bamtofq_metadata.cart.2018-07-10.json.pbs
+cd /home/mwshi/project/prostate/quality/log/
+#for i in `ls /home/mwshi/project/prostate/pbs/000_bamtofq_*.pbs`; do qsub -q batch -V -l nodes=1:ppn=4 $i;done
+for file in `ls /home/sqian/yangz/TCGA-PRAD/data/`
+do
+if [ ! -e /home/mwshi/project/prostate/quality/TCGA/${file}_2.fq.gz ]
+then
+#echo $file
+qsub -q batch -V -l nodes=1:ppn=4 /home/mwshi/project/prostate/pbs/000_bamtofq_${file}.pbs
+fi
+done
+
+
+
+
+

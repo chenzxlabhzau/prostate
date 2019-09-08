@@ -1,0 +1,58 @@
+mkdir -p /home/mwshi/project/genome/intron
+cp /home/mwshi/project/genome/ensGene.txt /home/mwshi/project/genome/intron
+python /home/mwshi/tools/github/rnaseqlib/rnaseqlib/gff/gff_make_annotation.py /home/mwshi/project/genome/intron /home/mwshi/project/genome/intron/gff --flanking-rule commonshortest --genome-label hg38
+
+mkdir /home/mwshi/project/genome/intron/index
+mkdir /home/mwshi/project/genome/intron/index/SI
+mkdir /home/mwshi/project/genome/intron/index/RI
+source activate shimwpy
+index_gff --index /home/mwshi/project/genome/intron/gff/commonshortest/SI.hg38.gff3  /home/mwshi/project/genome/intron/index/SI
+index_gff --index /home/mwshi/project/genome/intron/gff/commonshortest/RI.hg38.gff3  /home/mwshi/project/genome/intron/index/RI
+
+mkdir -p /home/mwshi/project/prostate/intron
+mkdir -p /home/mwshi/project/prostate/intron/SI
+mkdir -p /home/mwshi/project/prostate/intron/RI
+
+
+dir2="intron"
+
+#for file in `ls /home/mwshi/project/prostate/bam/$dir2`
+#do
+#mkdir -p /home/mwshi/project/prostate/intron/SI/$file
+#mkdir -p /home/mwshi/project/prostate/intron/RI/$file
+#echo -e "samtools index -b /home/mwshi/project/prostate/bam/$dir2/$file/${file}Aligned.sortedByCoord.out.bam" > /home/mwshi/project/prostate/pbs/008_index_$file.pbs
+done
+#for i in `ls /home/mwshi/project/prostate/pbs/008_index_*.pbs`;do qsub -q batch -V -l nodes=1:ppn=4 $i;done
+
+
+dir2="intron"
+
+mkdir -p /home/mwshi/project/prostate/intron/RI
+mkdir -p /home/mwshi/project/prostate/intron/SI
+for file in `ls /home/mwshi/project/prostate/bam/$dir2`
+do
+
+
+echo -e "mkdir -p /home/mwshi/project/prostate/intron/RI/$file\nmkdir -p /home/mwshi/project/prostate/intron/SI/$file\nsource activate shimwpy;miso --run /home/mwshi/project/genome/intron/index/RI/ /home/mwshi/project/prostate/bam/$dir2/$file/${file}Aligned.sortedByCoord.out.bam --output-dir /home/mwshi/project/prostate/intron/RI/$file --read-len 101 --paired-end 250 25\nmiso --run /home/mwshi/project/genome/intron/index/SI/ /home/mwshi/project/prostate/bam/$dir2/$file/${file}Aligned.sortedByCoord.out.bam --output-dir /home/mwshi/project/prostate/intron/SI/$file --read-len 101 --paired-end 250 25" > /home/mwshi/project/prostate/pbs/008_intron_$file.pbs
+done
+mkdir -p /home/mwshi/project/prostate/intron/log/
+cd /home/mwshi/project/prostate/intron/log/
+for i in `ls /home/mwshi/project/prostate/pbs/008_intron_*.pbs`;do qsub -q batch -V -l nodes=1:ppn=4 $i;done
+
+
+##summarize_miso
+
+for file in `ls /home/mwshi/project/prostate/bam/intron`
+do
+echo -e "source activate shimwpy\nsummarize_miso --summarize-samples /home/mwshi/project/prostate/intron/SI/$file /home/mwshi/project/prostate/intron/SI/$file\nsummarize_miso --summarize-samples /home/mwshi/project/prostate/intron/RI/$file /home/mwshi/project/prostate/intron/RI/$file" > /home/mwshi/project/prostate/pbs/008_summary_$file.pbs
+done
+cd /home/mwshi/project/prostate/intron/log/
+for i in `ls /home/mwshi/project/prostate/pbs/008_summary_*.pbs`;do qsub -q batch -V -l nodes=1:ppn=2 $i;done
+
+
+
+
+
+
+
+

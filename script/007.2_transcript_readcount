@@ -1,0 +1,14 @@
+#计算转录本表达量
+dir="TCGA"
+mkdir -p /home/mwshi/project/prostate/transcript/TCGA/
+for file in `ls /home/mwshi/project/prostate/bam/$dir`
+do echo -e 'htseq-count -f bam -r pos -s no -t exon -i transcript_id /home/mwshi/project/prostate/bam/'$dir'/'$file'/'$file'Aligned.sortedByCoord.out.bam /home/zxchen/data/annotation/Ensembl_92/Homo_sapiens>/home/mwshi/project/prostate/transcript/'$dir'/'$file'.txt'>/home/mwshi/project/prostate/pbs/007.2_transcript_readcount_$file.pbs
+done
+
+mkdir -p /home/mwshi/project/prostate/transcript/log
+cd /home/mwshi/project/prostate/transcript/log
+for i in `ls /home/mwshi/project/prostate/pbs/007.2_transcript_readcount_TCGA*.pbs`; do qsub -q batch -V -l nodes=1:ppn=4 $i;done
+
+
+Rscript /home/mwshi/project/prostate/script/readcount.R /home/mwshi/project/prostate/transcript/TCGA/
+Rscript /home/mwshi/project/prostate/script/fpkm.R /home/mwshi/project/prostate/transcript/TCGA/
